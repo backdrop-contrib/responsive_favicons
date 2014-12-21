@@ -14,10 +14,17 @@ function responsive_favicons_requirements($phase) {
     // Make sure that the favicons exist.
     $tags = responsive_favicons_load_all_icons();
     if (!empty($tags['missing'])) {
-      $requirements['responsive_favicons'] = array(
-        'title' => t('Missing responsive favicons'),
+      $requirements['responsive_favicons_error'] = array(
+        'title' => t('Responsive favicons'),
         'value' => implode('<br/>', array_map('check_plain', $tags['missing'])),
         'severity' => REQUIREMENT_ERROR,
+      );
+    }
+    if (!empty($tags['found'])) {
+      $requirements['responsive_favicons_ok'] = array(
+        'title' => t('Responsive favicons'),
+        'value' => format_plural(count($tags['found']), 'Found 1 favicon', 'Found @count favicons'),
+        'severity' => REQUIREMENT_OK,
       );
     }
   }

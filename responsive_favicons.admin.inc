@@ -25,6 +25,11 @@ function responsive_favicons_config_page() {
     '#default_value' => implode(PHP_EOL, variable_get('responsive_favicons_tags', array())),
     '#rows' => 16,
   );
+  $form['responsive_favicons_upload'] = array(
+    '#type' => 'file',
+    '#title' => t('Upload a zip file from realfavicongenerator.net to install'),
+    '#description' => t('For example: %filename from your local computer. This only needs to be done once.', array('%filename' => 'favicons.zip')),
+  );
   $form['responsive_favicons_remove_default'] = array(
     '#type' => 'checkbox',
     '#title' => t('Remove default favicon from Drupal'),
@@ -49,4 +54,111 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
 
   // Remove trailing slash on responsive_favicons_path.
   $form_state['values']['responsive_favicons_path'] = rtrim($form_state['values']['responsive_favicons_path'], '/');
+
+  // Attempt the upload and extraction of the zip file.
+  if ($_FILES['files']['name']['responsive_favicons_upload']) {
+    $validators = array('file_validate_extensions' => array(archiver_get_extensions()));
+    $field = 'responsive_favicons_upload';
+    if (!($finfo = file_save_upload($field, $validators, NULL, FILE_EXISTS_REPLACE))) {
+      // Failed to upload the file. file_save_upload() calls form_set_error() on
+      // failure.
+      return;
+    }
+    $local_cache = $finfo->uri;
+
+    $directory = _responsive_favicons_extract_directory();
+    try {
+      $archive = _responsive_favicons_archive_extract($local_cache, $directory);
+    }
+    catch (Exception $e) {
+      form_set_error($field, $e->getMessage());
+      return;
+    }
+
+    $files = $archive->listContents();
+    if (!$files) {
+      form_set_error($field, t('Provided archive contains no files.'));
+      return;
+    }
+
+    // Create the destination directory.
+    $destination = variable_get('file_default_scheme', 'public') . '://' . variable_get('responsive_favicons_path', 'favicons');
+    file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
+
+    // Copy the files to the correct location.
+    $success_count = 0;
+    foreach ($files as $file) {
+      $success = file_unmanaged_copy($directory . '/' . $file, $destination, FILE_EXISTS_REPLACE);
+      if ($success) {
+        $success_count++;
+      }
+    }
+
+    if ($success_count > 0) {
+      drupal_set_message(format_plural($success_count, 'Uploaded 1 favicon successfully.', 'Uploaded @count favicons successfully.'));
+    }
+  }
+}
+
+/**
+ * Returns a short unique identifier for this Drupal installation.
+ *
+ * @return
+ *   An eight character string uniquely identifying this Drupal installation.
+ */
+function _responsive_favicons_unique_identifier() {
+  $id = &drupal_static(__FUNCTION__, '');
+  if (empty($id)) {
+    $id = substr(hash('sha256', drupal_get_hash_salt()), 0, 8);
+  }
+  return $id;
+}
+
+/**
+ * Returns the directory where update archive files should be extracted.
+ *
+ * @param $create
+ *   (optional) Whether to attempt to create the directory if it does not
+ *   already exist. Defaults to TRUE.
+ *
+ * @return
+ *   The full path to the temporary directory where update file archives should
+ *   be extracted.
+ */
+function _responsive_favicons_extract_directory($create = TRUE) {
+  $directory = &drupal_static(__FUNCTION__, '');
+  if (empty($directory)) {
+    $directory = 'temporary://responsive-favicons .' . _responsive_favicons_unique_identifier();
+    if ($create && !file_exists($directory)) {
+      mkdir($directory);
+    }
+  }
+  return $directory;
+}
+
+/**
+ * Unpacks a downloaded archive file.
+ *
+ * @param string $file
+ *   The filename of the archive you wish to extract.
+ * @param string $directory
+ *   The directory you wish to extract the archive into.
+ *
+ * @return Archiver
+ *   The Archiver object used to extract the archive.
+ *
+ * @throws Exception
+ */
+function _responsive_favicons_archive_extract($file, $directory) {
+  $archiver = archiver_get_archiver($file);
+  if (!$archiver) {
+    throw new Exception(t('Cannot extract %file, not a valid archive.', array ('%file' => $file)));
+  }
+
+  if (file_exists($directory)) {
+    file_unmanaged_delete_recursive($directory);
+  }
+
+  $archiver->extract($directory);
+  return $archiver;
 }
