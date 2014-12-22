@@ -45,15 +45,15 @@ function responsive_favicons_page_build(&$page) {
  */
 function responsive_favicons_html_head_alter(&$head_elements) {
   $favicon_remove_default = variable_get('responsive_favicons_remove_default', 0);
-  if (empty($head_elements['responsive-favicons']) || $favicon_remove_default == 0) {
+  if (empty($head_elements['responsive_favicons']) || $favicon_remove_default == 0) {
     return;
   }
 
   // Remove the default favicon from the head section.
   foreach ($head_elements as $key => $element) {
     if (!empty($element['#attributes'])) {
-      if (array_key_exists('href', $element['#attributes'])) {
-        if (strpos($element['#attributes']['href'], '/favicon.ico') !== FALSE) {
+      if (array_key_exists('rel', $element['#attributes'])) {
+        if ($element['#attributes']['rel'] === 'shortcut icon') {
           unset($head_elements[$key]);
         }
       }
