@@ -53,7 +53,10 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
   // Remove trailing slash on responsive_favicons_path.
   $form_state['values']['responsive_favicons_path'] = rtrim($form_state['values']['responsive_favicons_path'], '/');
 
-  // Attempt the upload and extraction of the zip file.
+  // Attempt the upload and extraction of the zip file. This code is largely
+  // based on the code in Drupal core.
+  //
+  // @see update_manager_install_form_submit().
   if ($_FILES['files']['name']['responsive_favicons_upload']) {
     $validators = array('file_validate_extensions' => array(archiver_get_extensions()));
     $field = 'responsive_favicons_upload';

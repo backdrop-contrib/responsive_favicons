@@ -88,7 +88,8 @@ function responsive_favicons_load_all_icons() {
 
 /**
  * Helper function to check whether responsive favicon files exist and are
- * readable.
+ * readable. This function also strips any pasted content that is not a link
+ * or a meta tag.
  *
  * @param string $html
  *   html tag

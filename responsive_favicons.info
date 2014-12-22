@@ -1,5 +1,4 @@
-name = Responsive Favicons
-description = Add responsive favicons
+name = "Responsive Favicons"
+description = "Add responsive favicons to your site based on the code from http://realfavicongenerator.net/"
 core = 7.x
-package = Responsive Favicons
 configure = admin/config/user-interface/responsive_favicons
