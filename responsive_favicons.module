@@ -154,7 +154,7 @@ function _responsive_favicons_normalise_path($file_path) {
 
   // Remove absolute URLs.
   if (url_is_external($file_path)) {
-    $file_path = str_replace($base_url, '', $file_path);
+    $file_path = str_replace($base_path, '', $file_path);
   }
 
   // There appears to be no sane way of getting a relative path to a file, so
