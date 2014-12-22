@@ -169,3 +169,37 @@ function _responsive_favicons_normalise_path($file_path) {
   // Add in base path.
   return $base_path . $relative_path;
 }
+
+/**
+ * Implements hook_help().
+ *
+ * Displays the module information.
+ */
+function responsive_favicons_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#responsive_favicons':
+      $path = dirname(__FILE__) . '/README.txt';
+      if (file_exists($path)) {
+        $readme = file_get_contents($path);
+      }
+      if (!isset($readme)) {
+        return NULL;
+      }
+      if (module_exists('markdown')) {
+        $filters = module_invoke('markdown', 'filter_info');
+        $info = $filters['filter_markdown'];
+
+        if (function_exists($info['process callback'])) {
+          $function = $info['process callback'];
+          $output = filter_xss_admin($function($readme, NULL));
+        }
+        else {
+          $output = '<pre>' . check_plain($readme) . '</pre>';
+        }
+      }
+      else {
+        $output = '<pre>' . check_plain($readme) . '</pre>';
+      }
+      return $output;
+  }
+}
