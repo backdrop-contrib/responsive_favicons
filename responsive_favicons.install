@@ -17,6 +17,10 @@ function responsive_favicons_requirements($phase) {
       $requirements['responsive_favicons_error'] = array(
         'title' => t('Responsive favicons'),
         'value' => implode('<br/>', array_map('check_plain', $tags['missing'])),
+        'description' => t(
+          'The favicon files are missing for the tags above. Go to <a href="@config-url">configuration page</a> to add missing files.',
+          array('@config-url' => url('admin/config/user-interface/responsive_favicons'))
+         ),
         'severity' => REQUIREMENT_ERROR,
       );
     }
