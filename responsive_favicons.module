@@ -62,14 +62,15 @@ function responsive_favicons_menu() {
 /**
  * Implements hook_page_build().
  *
- * Adds responsive favicons to HTML head.
+ * Adds responsive favicons to HTML head. A trailing newline is added to ensure
+ * the next tag in the HTML head section starts on the next line.
  */
 function responsive_favicons_page_build(&$page) {
   $tags = responsive_favicons_load_all_icons();
   if (!empty($tags['found'])) {
     $html = array(
       '#type' => 'markup',
-      '#markup' => implode(PHP_EOL, $tags['found']),
+      '#markup' => implode(PHP_EOL, $tags['found']) . PHP_EOL,
     );
 
     drupal_add_html_head($html, 'responsive_favicons');
