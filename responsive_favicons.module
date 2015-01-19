@@ -100,23 +100,28 @@ function responsive_favicons_html_head_alter(&$head_elements) {
 
 /**
  * Load the responsive favicons that are valid.
- *
- * @todo add caching using cache_set to store when all favicons are present (as
- *       this should be the usual case).
  */
 function responsive_favicons_load_all_icons() {
   $icons = &drupal_static(__FUNCTION__);
   if (!isset($icons)) {
-    $responsive_favicon_tags = variable_get('responsive_favicons_tags', '');
-    if (empty($responsive_favicon_tags)) {
-      $icons = array(
-        'found' => array(),
-        'missing' => array(),
-      );
+    if ($cached = cache_get('responsive_favicons_icons', 'cache')) {
+      $icons = $cached->data;
     }
     else {
-      $html = implode('', $responsive_favicon_tags);
-      $icons = _responsive_favicons_validate_tags($html);
+      $responsive_favicon_tags = variable_get('responsive_favicons_tags', '');
+      if (empty($responsive_favicon_tags)) {
+        $icons = array(
+          'found' => array(),
+          'missing' => array(),
+        );
+      }
+      else {
+        $html = implode('', $responsive_favicon_tags);
+        $icons = _responsive_favicons_validate_tags($html);
+        if (empty($icons['missing'])) {
+          cache_set('responsive_favicons_icons', $icons, 'cache');
+        }
+      }
     }
   }
 
