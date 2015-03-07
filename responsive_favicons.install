@@ -34,3 +34,23 @@ function responsive_favicons_requirements($phase) {
 
   return $requirements;
 }
+
+/**
+ * Implementations of hook_update_N().
+ */
+
+/**
+ * Tidy up the tags variable.
+ */
+function responsive_favicons_update_7100() {
+  $tags = variable_get('responsive_favicons_tags', array());
+  if (!empty($tags)) {
+    $new_tags;
+    foreach ($tags as $pos => $tag) {
+      if (!empty($tag)) {
+        $new_tags[] = trim($tag);
+      }
+    }
+    variable_set('responsive_favicons_tags', $new_tags);
+  }
+}

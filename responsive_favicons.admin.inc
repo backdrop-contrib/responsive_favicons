@@ -46,7 +46,12 @@ function responsive_favicons_config_page() {
 function responsive_favicons_config_page_submit($form, &$form_state) {
   // We want to save tags as an array.
   if (isset($form_state['values']['responsive_favicons_tags'])) {
-    variable_set('responsive_favicons_tags', explode(PHP_EOL, $form_state['values']['responsive_favicons_tags']));
+    $tags = explode(PHP_EOL, $form_state['values']['responsive_favicons_tags']);
+    $tags = array_filter($tags);
+    foreach ($tags as $pos => $tag) {
+      $tags[$pos] = trim($tag);
+    }
+    variable_set('responsive_favicons_tags', $tags);
     unset($form_state['values']['responsive_favicons_tags']);
   }
 

@@ -116,7 +116,7 @@ function responsive_favicons_load_all_icons() {
         );
       }
       else {
-        $html = implode('', $responsive_favicon_tags);
+        $html = implode(PHP_EOL, $responsive_favicon_tags);
         $icons = _responsive_favicons_validate_tags($html);
         if (empty($icons['missing'])) {
           cache_set('responsive_favicons_icons', $icons, 'cache');
