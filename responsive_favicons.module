@@ -12,7 +12,7 @@ function responsive_favicons_help($path, $arg) {
   switch ($path) {
     case 'admin/help#responsive_favicons':
       $readme_file = dirname(__FILE__) . '/README.txt';
-      if (file_exists($readme)) {
+      if (file_exists($readme_file)) {
         $readme = file_get_contents($readme_file);
       }
       if (!isset($readme)) {
