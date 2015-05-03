@@ -13,7 +13,7 @@ function responsive_favicons_config_page() {
     '#type' => 'textfield',
     '#title' => t('Path to responsive favicon files'),
     '#description' => t('A local file system path where favicon files will be stored. This directory must exist and be writable by Drupal.'),
-    '#field_prefix' => file_create_url(variable_get('file_default_scheme', 'public') . '://'),
+    '#field_prefix' => file_create_url('public://'),
     '#default_value' => variable_get('responsive_favicons_path', 'favicons'),
   );
   $form['responsive_favicons_tags'] = array(
@@ -88,7 +88,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     }
 
     // Create the destination directory.
-    $destination = variable_get('file_default_scheme', 'public') . '://' . variable_get('responsive_favicons_path', 'favicons');
+    $destination = 'public://' . variable_get('responsive_favicons_path', 'favicons');
     file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
 
     // Copy the files to the correct location.

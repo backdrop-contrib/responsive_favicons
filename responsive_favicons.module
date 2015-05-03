@@ -203,7 +203,7 @@ function _responsive_favicons_normalise_path($file_path) {
   // There appears to be no sane way of getting a relative path to a file, so
   // this is the best for now.
   // @see https://www.drupal.org/node/837794#comment-9124435
-  $wrapper = file_stream_wrapper_get_instance_by_uri(variable_get('file_default_scheme', 'public') . '://');
+  $wrapper = file_stream_wrapper_get_instance_by_uri('public://');
   if ($wrapper instanceof DrupalLocalStreamWrapper) {
     $relative_path = $wrapper->getDirectoryPath() . '/' . variable_get('responsive_favicons_path', 'favicons') . $file_path;
   }
