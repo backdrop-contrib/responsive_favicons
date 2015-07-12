@@ -138,7 +138,7 @@ function responsive_favicons_load_all_icons() {
  * @return array $missing_files
  */
 function _responsive_favicons_validate_tags($html) {
-  global $base_url;
+  global $base_path;
 
   $found = array();
   $missing = array();
@@ -146,13 +146,17 @@ function _responsive_favicons_validate_tags($html) {
   $dom = new DOMDocument();
   $dom->loadHTML($html);
 
+  // DRUPAL_ROOT contains the sub directory of the Drupal install (if present),
+  // in our case we do not want this as $file_path already contains this.
+  $docroot = preg_replace('/' . preg_quote($base_path, '/') . '$/', '/', DRUPAL_ROOT);
+
   // Find all the apple touch icons.
   $tags = $dom->getElementsByTagName('link');
   foreach ($tags as $tag) {
     $file_path = _responsive_favicons_normalise_path($tag->getAttribute('href'));
     $tag->setAttribute('href', $file_path);
 
-    if (file_exists(DRUPAL_ROOT . $file_path) && is_readable(DRUPAL_ROOT . $file_path)) {
+    if (file_exists($docroot . $file_path) && is_readable($docroot . $file_path)) {
       $found[] = $dom->saveXML($tag);
     }
     else {
@@ -170,7 +174,7 @@ function _responsive_favicons_validate_tags($html) {
       $file_path = _responsive_favicons_normalise_path($tag->getAttribute('content'));
       $tag->setAttribute('content', $file_path);
 
-      if (file_exists(DRUPAL_ROOT . $file_path) && is_readable(DRUPAL_ROOT . $file_path)) {
+      if (file_exists($docroot . $file_path) && is_readable($docroot . $file_path)) {
         $found[] = $dom->saveXML($tag);
       }
       else {
