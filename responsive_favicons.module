@@ -45,6 +45,28 @@ function responsive_favicons_help($path, $arg) {
  * Implements hook_menu().
  */
 function responsive_favicons_menu() {
+  // List of icons to redirect.
+  // Note, in order for these to work alter the fast404 pattern to allow these
+  // requests to hit Drupal. Please see the README for more information.
+  $icons = array(
+    'apple-touch-icon.png',
+    'apple-touch-icon-precomposed.png',
+    'browserconfig.xml',
+  );
+  // Try to avoid clashing with the favicon module.
+  if (!module_exists('favicon')) {
+    $icons[] = 'favicon.ico';
+  }
+  foreach($icons as $icon) {
+    $items[$icon] = array(
+      'page callback' => 'responsive_favicons_get_file',
+      'page arguments' => array($icon),
+      'delivery callback' => 'responsive_favicons_deliver_file',
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+      'file' => 'responsive_favicons.delivery.inc',
+    );
+  }
   $items['admin/config/user-interface/responsive_favicons'] = array(
     'title' => 'Responsive favicons',
     'description' => 'Configure responsive favicons',

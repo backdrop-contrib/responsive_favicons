@@ -37,9 +37,31 @@ Installation and configuration
    Here you will need to paste in the HTML provided by realfavicongenerator.net
    and upload the zip file they provided you with.
 
+4. [optional] You can also allow this module to take over common paths like:
+
+   * favicon.ico
+   * apple-touch-icon.png
+   * apple-touch-icon-precomposed.png
+   * browserconfig.xml
+
+   In order to do this you need to:
+
+   1) Comment out the line
+
+   #RewriteCond %{REQUEST_URI} !=/favicon.ico
+
+   in the Drupal root .htaccess file.
+
+   2) Alter the variable 404_fast_paths_exclude in your settings.php file:
+
+   $conf['404_fast_paths_exclude'] = '/\/(?:styles)\/|favicon\.ico|apple-touch-icon(?:-precomposed)?\.png|browserconfig\.xml/';
+
 You site will now output the required metadata for the favicons to work. You can
 always check the status report page to find out if your site has been correctly
 configured.
+
+Note. The 'favicon' module duplicates some of the functionality of responsive
+favicons, so it is preferred that you only install one of the two modules.
 
 
 Further reading
