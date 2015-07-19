@@ -95,8 +95,26 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     $success_count = 0;
     foreach ($files as $file) {
       $success = file_unmanaged_copy($directory . '/' . $file, $destination, FILE_EXISTS_REPLACE);
+      $uri = $destination . '/' . $file;
       if ($success) {
         $success_count++;
+
+        // Rewrite the paths of the JSON files.
+        if (preg_match('/\.json$/', $file)) {
+          $file_contents = file_get_contents(drupal_realpath($uri));
+          $find = preg_quote('"\/android-chrome', '/');
+          $replace = '"' . str_replace('/', '\/', _responsive_favicons_normalise_path('/android-chrome'));
+          $file_contents = preg_replace('/' . $find . '/', $replace, $file_contents);
+          file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
+        }
+        // Rewrite the paths of the XML files.
+        else if (preg_match('/\.xml$/', $file)) {
+          $file_contents = file_get_contents(drupal_realpath($uri));
+          $find = preg_quote('"/mstile', '/');
+          $replace = '"' . _responsive_favicons_normalise_path('/mstile');
+          $file_contents = preg_replace('/' . $find . '/', $replace, $file_contents);
+          file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
+        }
       }
     }
 

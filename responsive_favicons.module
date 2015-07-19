@@ -217,6 +217,11 @@ function _responsive_favicons_validate_tags($html) {
 
 /**
  * Help to normalise the path to the icons.
+ *
+ * @param $file_path
+ *   The filename of the icon.
+ * @return string
+ *   The full relative path to the icon within public files.
  */
 function _responsive_favicons_normalise_path($file_path) {
   global $base_path;
@@ -234,6 +239,5 @@ function _responsive_favicons_normalise_path($file_path) {
     $relative_path = $wrapper->getDirectoryPath() . '/' . variable_get('responsive_favicons_path', 'favicons') . $file_path;
   }
 
-  // Add in base path.
   return $base_path . $relative_path;
 }
