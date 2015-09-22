@@ -45,6 +45,15 @@ function responsive_favicons_requirements($phase) {
 }
 
 /**
+ * Implements hook_uninstall().
+ */
+function responsive_favicons_uninstall() {
+  variable_del('responsive_favicons_path');
+  variable_del('responsive_favicons_tags');
+  variable_del('responsive_favicons_remove_default');
+}
+
+/**
  * Implementations of hook_update_N().
  */
 
