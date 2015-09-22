@@ -72,3 +72,14 @@ function responsive_favicons_update_7100() {
     variable_set('responsive_favicons_tags', $new_tags);
   }
 }
+
+/**
+ * Grants "administer responsive favicons" permission to those with "administer
+ * themes".
+ */
+function responsive_favicons_update_7101() {
+  $roles = user_roles(TRUE, 'administer themes');
+  foreach ($roles as $rid => $role) {
+    user_role_grant_permissions($rid, array('administer responsive favicons'));
+  }
+}

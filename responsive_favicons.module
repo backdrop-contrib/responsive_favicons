@@ -40,6 +40,16 @@ function responsive_favicons_help($path, $arg) {
   }
 }
 
+/**
+ * Implements hook_permission().
+ */
+function responsive_favicons_permission() {
+  return array(
+    'administer responsive favicons' => array(
+      'title' => t('Administer responsive favicons'),
+    ),
+  );
+}
 
 /**
  * Implements hook_menu().
@@ -73,7 +83,7 @@ function responsive_favicons_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('responsive_favicons_config_page'),
     'access callback' => 'user_access',
-    'access arguments' => array('administer themes'),
+    'access arguments' => array('administer responsive favicons'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'responsive_favicons.admin.inc',
   );
