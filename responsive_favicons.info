@@ -1,4 +1,7 @@
-name = "Responsive Favicons"
-description = "Add responsive favicons to your site based on the code from http://realfavicongenerator.net/"
-core = 7.x
+name = Responsive Favicons
+description = Add responsive favicons to your site based on the code from http://realfavicongenerator.net/
+package = Basic Cart
+backdrop = 1.x
+version = 1.x-1.1
+type = module
 configure = admin/config/user-interface/responsive_favicons

@@ -12,15 +12,15 @@ function responsive_favicons_config_page() {
   $form['responsive_favicons_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Path to responsive favicon files'),
-    '#description' => t('A local file system path where favicon files will be stored. This directory must exist and be writable by Drupal.'),
+    '#description' => t('A local file system path where favicon files will be stored. This directory must exist and be writable by Backdrop.'),
     '#field_prefix' => file_create_url('public://'),
-    '#default_value' => variable_get('responsive_favicons_path', 'favicons'),
+    '#default_value' => config_get('responsive_favicons.settings', 'responsive_favicons_path'), 
   );
   $form['responsive_favicons_tags'] = array(
     '#type' => 'textarea',
     '#title' => t('Favicon tags'),
     '#description' => t('Paste the code provided by <a href="http://realfavicongenerator.net/" target="_blank">http://realfavicongenerator.net/</a>. Make sure each link is on a separate line. It is fine to paste links with paths like "/apple-touch-icon-57x57.png" as these will be converted to the correct paths automatically.'),
-    '#default_value' => implode(PHP_EOL, variable_get('responsive_favicons_tags', array())),
+    '#default_value' => implode(PHP_EOL, config_get('responsive_favicons.settings', 'responsive_favicons_tags')),
     '#rows' => 16,
   );
   $form['responsive_favicons_upload'] = array(
@@ -30,14 +30,18 @@ function responsive_favicons_config_page() {
   );
   $form['responsive_favicons_remove_default'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Remove default favicon from Drupal'),
+    '#title' => t('Remove default favicon from Backdrop'),
     '#description' => t('It is recommended to remove default favicon as it can cause issues'),
-    '#default_value' => variable_get('responsive_favicons_remove_default', 0),
+    '#default_value' => config_get('responsive_favicons.settings', 'responsive_favicons_remove_default'), 
   );
 
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
   $form['#submit'][] = 'responsive_favicons_config_page_submit';
-
-  return system_settings_form($form);
+  return $form;
 }
 
 /**
@@ -51,7 +55,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     foreach ($tags as $pos => $tag) {
       $tags[$pos] = trim($tag);
     }
-    variable_set('responsive_favicons_tags', $tags);
+    config_set('responsive_favicons.settings', 'responsive_favicons_tags', $tags); 
     unset($form_state['values']['responsive_favicons_tags']);
   }
 
@@ -59,7 +63,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
   $form_state['values']['responsive_favicons_path'] = rtrim($form_state['values']['responsive_favicons_path'], '/');
 
   // Attempt the upload and extraction of the zip file. This code is largely
-  // based on the code in Drupal core.
+  // based on the code in Backdrop core.
   //
   // @see update_manager_install_form_submit().
   if ($_FILES['files']['name']['responsive_favicons_upload']) {
@@ -88,7 +92,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     }
 
     // Create the destination directory.
-    $destination = 'public://' . variable_get('responsive_favicons_path', 'favicons');
+    $destination = 'public://' . config_get('responsive_favicons.settings', 'responsive_favicons_path'); 
     file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
 
     // Copy the files to the correct location.
@@ -101,7 +105,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
 
         // Rewrite the paths of the JSON files.
         if (preg_match('/\.json$/', $file)) {
-          $file_contents = file_get_contents(drupal_realpath($uri));
+          $file_contents = file_get_contents(backdrop_realpath($uri));
           $find = preg_quote('"\/android-chrome', '/');
           $replace = '"' . str_replace('/', '\/', _responsive_favicons_normalise_path('/android-chrome'));
           $file_contents = preg_replace('/' . $find . '/', $replace, $file_contents);
@@ -109,7 +113,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
         }
         // Rewrite the paths of the XML files.
         else if (preg_match('/\.xml$/', $file)) {
-          $file_contents = file_get_contents(drupal_realpath($uri));
+          $file_contents = file_get_contents(backdrop_realpath($uri));
           $find = preg_quote('"/mstile', '/');
           $replace = '"' . _responsive_favicons_normalise_path('/mstile');
           $file_contents = preg_replace('/' . $find . '/', $replace, $file_contents);
@@ -119,21 +123,31 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     }
 
     if ($success_count > 0) {
-      drupal_set_message(format_plural($success_count, 'Uploaded 1 favicon successfully.', 'Uploaded @count favicons successfully.'));
+      backdrop_set_message(format_plural($success_count, 'Uploaded 1 favicon successfully.', 'Uploaded @count favicons successfully.'));
     }
   }
+
+$config = config('responsive_favicons.settings');
+foreach ($form_state['values'] as $key => $value)
+{
+$config->set($key, $value);
+}
+
+$config->save();
+backdrop_set_message(t('The configuration options have been saved.'));
+
 }
 
 /**
- * Returns a short unique identifier for this Drupal installation.
+ * Returns a short unique identifier for this Backdrop installation.
  *
  * @return
- *   An eight character string uniquely identifying this Drupal installation.
+ *   An eight character string uniquely identifying this Backdrop installation.
  */
 function _responsive_favicons_unique_identifier() {
-  $id = &drupal_static(__FUNCTION__, '');
+  $id = &backdrop_static(__FUNCTION__, '');
   if (empty($id)) {
-    $id = substr(hash('sha256', drupal_get_hash_salt()), 0, 8);
+    $id = substr(hash('sha256', backdrop_get_hash_salt()), 0, 8);
   }
   return $id;
 }
@@ -150,7 +164,7 @@ function _responsive_favicons_unique_identifier() {
  *   be extracted.
  */
 function _responsive_favicons_extract_directory($create = TRUE) {
-  $directory = &drupal_static(__FUNCTION__, '');
+  $directory = &backdrop_static(__FUNCTION__, '');
   if (empty($directory)) {
     $directory = 'temporary://responsive-favicons .' . _responsive_favicons_unique_identifier();
     if ($create && !file_exists($directory)) {

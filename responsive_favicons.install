@@ -48,38 +48,21 @@ function responsive_favicons_requirements($phase) {
  * Implements hook_uninstall().
  */
 function responsive_favicons_uninstall() {
-  variable_del('responsive_favicons_path');
-  variable_del('responsive_favicons_tags');
-  variable_del('responsive_favicons_remove_default');
+
 }
 
-/**
- * Implementations of hook_update_N().
- */
 
-/**
- * Tidy up the tags variable.
- */
-function responsive_favicons_update_7100() {
-  $tags = variable_get('responsive_favicons_tags', array());
-  if (!empty($tags)) {
-    $new_tags = array();
-    foreach ($tags as $pos => $tag) {
-      if (!empty($tag)) {
-        $new_tags[] = trim($tag);
-      }
-    }
-    variable_set('responsive_favicons_tags', $new_tags);
-  }
-}
 
-/**
- * Grants "administer responsive favicons" permission to those with "administer
- * themes".
- */
-function responsive_favicons_update_7101() {
-  $roles = user_roles(TRUE, 'administer themes');
-  foreach ($roles as $rid => $role) {
-    user_role_grant_permissions($rid, array('administer responsive favicons'));
-  }
+function responsive_favicons_update_1000() {
+  $config = config('responsive_favicons.settings');
+
+  $config->set('responsive_favicons_path', update_variable_get('responsive_favicons_path'));
+  $config->set('responsive_favicons_tags', update_variable_get('responsive_favicons_tags'));
+  $config->set('responsive_favicons_remove_default', update_variable_get('responsive_favicons_remove_default'));
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('responsive_favicons_path');
+  update_variable_del('responsive_favicons_tags');
+  update_variable_del('responsive_favicons_remove_default');
 }

@@ -16,7 +16,7 @@
  *   a file object.
  */
 function responsive_favicons_get_file($file_path) {
-  $uri = 'public://' . variable_get('responsive_favicons_path', 'favicons') . '/' . $file_path;
+  $uri = 'public://' . config_get('responsive_favicons.settings', 'responsive_favicons_path') . '/' . $file_path;
 
   $file = new stdClass();
   $file->uri = $uri;
@@ -35,11 +35,11 @@ function responsive_favicons_get_file($file_path) {
  */
 function responsive_favicons_deliver_file($file) {
   if (is_int($file)) {
-    drupal_deliver_html_page($file);
+    backdrop_deliver_html_page($file);
     return;
   }
   elseif (!is_object($file) || !is_file($file->uri) || !is_readable($file->uri)) {
-    drupal_deliver_html_page(MENU_NOT_FOUND);
+    backdrop_deliver_html_page(MENU_NOT_FOUND);
     return;
   }
 
@@ -53,21 +53,21 @@ function responsive_favicons_deliver_file($file) {
   module_invoke_all('file_transfer', $file->uri, $headers);
 
   foreach ($headers as $name => $value) {
-    drupal_add_http_header($name, $value);
+    backdrop_add_http_header($name, $value);
   }
 
   $fd = fopen($file->uri, 'rb');
   if ($fd !== FALSE) {
     while (!feof($fd)) {
-      print fread($fd, DRUPAL_KILOBYTE);
+      print fread($fd, BACKDROP_KILOBYTE);
     }
     fclose($fd);
   }
   else {
     watchdog('responsive_favicons', 'Unable to open @uri for reading.', array('@uri' => $file->uri));
-    drupal_deliver_html_page(MENU_NOT_FOUND);
+    backdrop_deliver_html_page(MENU_NOT_FOUND);
     return;
   }
 
-  drupal_page_footer();
+  backdrop_page_footer();
 }
