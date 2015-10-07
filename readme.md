@@ -58,7 +58,7 @@ responsive_favicons_preprocess_page instead of hook_page_alter
 PERMISSIONS
 ------------
 
-none
+Administer responsive favicons
 
 
 USAGE

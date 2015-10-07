@@ -41,6 +41,18 @@ function responsive_favicons_help($path, $arg) {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function responsive_favicons_config_info() {
+  $prefixes['responsive_favicons.settings'] = array(
+    'label' => t('responsive_favicons settings'),
+    'group' => t('responsive_favicons'),
+  );
+  return $prefixes;
+}
+
+
+/**
  * Implements hook_permission().
  */
 function responsive_favicons_permission() {
