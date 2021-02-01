@@ -52,17 +52,34 @@ function responsive_favicons_uninstall() {
 }
 
 
-
+/**
+ * Convert Drupal variables to Backdrop config.
+ */
 function responsive_favicons_update_1000() {
   $config = config('responsive_favicons.settings');
 
-  $config->set('responsive_favicons_path', update_variable_get('responsive_favicons_path'));
-  $config->set('responsive_favicons_tags', update_variable_get('responsive_favicons_tags'));
-  $config->set('responsive_favicons_remove_default', update_variable_get('responsive_favicons_remove_default'));
+  $config->set('responsive_favicons_path', update_variable_get('responsive_favicons_path', 'favicons'));
+  $config->set('responsive_favicons_tags', update_variable_get('responsive_favicons_tags', array()));
+  $config->set('responsive_favicons_remove_default', update_variable_get('responsive_favicons_remove_default', 0));
   $config->save();
 
   // Delete variables.
   update_variable_del('responsive_favicons_path');
   update_variable_del('responsive_favicons_tags');
   update_variable_del('responsive_favicons_remove_default');
+}
+
+/**
+ * Remove extraneous config.
+ */
+function responsive_favicons_update_1001() {
+  $config = config('responsive_favicons.settings');
+
+  $config->clear('responsive_favicons_upload');
+  $config->clear('submit');
+  $config->clear('form_build_id');
+  $config->clear('form_token');
+  $config->clear('form_id');
+  $config->clear('op');
+  $config->save();
 }
