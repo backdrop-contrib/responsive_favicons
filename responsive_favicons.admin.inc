@@ -48,6 +48,7 @@ function responsive_favicons_config_page() {
  * Implements additional submit logic for responsive_favicons_settings_form().
  */
 function responsive_favicons_config_page_submit($form, &$form_state) {
+    $config = config('responsive_favicons.settings');
   // We want to save tags as an array.
   if (isset($form_state['values']['responsive_favicons_tags'])) {
     $tags = explode(PHP_EOL, $form_state['values']['responsive_favicons_tags']);
@@ -55,8 +56,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     foreach ($tags as $pos => $tag) {
       $tags[$pos] = trim($tag);
     }
-    config_set('responsive_favicons.settings', 'responsive_favicons_tags', $tags); 
-    unset($form_state['values']['responsive_favicons_tags']);
+    $config->set('responsive_favicons_tags', $tags); 
   }
 
   // Remove trailing slash on responsive_favicons_path.
@@ -92,7 +92,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     }
 
     // Create the destination directory.
-    $destination = 'public://' . config_get('responsive_favicons.settings', 'responsive_favicons_path'); 
+    $destination = 'public://' . $config->get('responsive_favicons_path'); 
     file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
 
     // Copy the files to the correct location.
@@ -127,15 +127,10 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     }
   }
 
-$config = config('responsive_favicons.settings');
-foreach ($form_state['values'] as $key => $value)
-{
-$config->set($key, $value);
-}
-
-$config->save();
-backdrop_set_message(t('The configuration options have been saved.'));
-
+  $config->set('responsive_favicons_path', $form_state['values']['responsive_favicons_path']);
+  $config->set('responsive_favicons_remove_default', $form_state['values']['responsive_favicons_remove_default']);
+  $config->save();
+  backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**
