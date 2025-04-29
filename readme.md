@@ -107,13 +107,15 @@ configured.
 Note. The 'favicon' module duplicates some of the functionality of responsive
 favicons, so it is preferred that you only install one of the two modules.
 
-LICENSE
--------
+Current Maintainers
+-----------
 
-This project is GPL v2 software. See the LICENSE.txt file in this directory for complete text.
+- [Martin Price](https://github.com/yorkshire-pudding) - [System Horizons Ltd](https://www.systemhorizons.co.uk)
+- Collaboration and co-maintainers welcome!
 
 CREDITS
 -----------
+Ported to Backdrop by [biolithic](https://github.com/biolithic)
 
 Supporting organizations:
 Catalyst IT
@@ -124,11 +126,7 @@ This module is based on the Responsive Icons module for Drupal, originally writt
 - wiifm <https://www.drupal.org/u/wiifm>
 - liuba <https://www.drupal.org/u/liuba>
 
-MAINTAINERS
------------
+LICENSE
+-------
 
-- seeking
-
-Ported to Backdrop by:
-
- - biolithic <https://github.com/biolithic>
+This project is GPL v2 software. See the LICENSE.txt file in this directory for complete text.
