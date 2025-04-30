@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  *
@@ -10,30 +9,36 @@
 /**
  * Creates a file object for the requested icon path.
  *
- * @param string $icon
- *   the icon filename.
- * @return object
- *   a file object.
+ * @param string $file_name
+ *   The icon or other asset filename.
+ * @return array
+ *   An array containing a File object.
  */
-function responsive_favicons_get_file($file_path) {
-  $uri = 'public://' . config_get('responsive_favicons.settings', 'responsive_favicons_path') . '/' . $file_path;
+function responsive_favicons_get_file($file_name) {
+  $uri = 'public://' . config_get('responsive_favicons.settings', 'responsive_favicons_path') . '/' . $file_name;
 
-  $file = new stdClass();
+  $file = new File();
   $file->uri = $uri;
   $file->filemime = file_get_mimetype($uri);
   $file->filesize = @filesize($uri);
 
-  return $file;
+  return array($file);
 }
 
 /**
  * Attempts to send the raw file back in the response.
  *
- * @param $file
- *   a file object respresenting the icon.
+ * @param array $file
+ *   An array containing a File object that represents the icon or other asset.
+ *   This is because the functions that look for any alters expect an array,
+ *   not an Object.
  * @see http://cgit.drupalcode.org/favicon/tree/src/DrupalFavicon.php#n145
  */
-function responsive_favicons_deliver_file($file) {
+function responsive_favicons_deliver_file(array $file) {
+  // Get the File object from the array.
+  $file = $file[0];
+
+  // Handle if the file does not exist in the favicon list of files.
   if (is_int($file)) {
     backdrop_deliver_html_page($file);
     return;
@@ -43,6 +48,7 @@ function responsive_favicons_deliver_file($file) {
     return;
   }
 
+  // If it does exist, serve that file at the request location.
   $headers = array(
     'Content-Type' => mime_header_encode($file->filemime),
     'Content-Disposition' => 'inline',

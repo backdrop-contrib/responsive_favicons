@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Responsive favicons install file.
@@ -40,17 +39,8 @@ function responsive_favicons_requirements($phase) {
       );
     }
   }
-
   return $requirements;
 }
-
-/**
- * Implements hook_uninstall().
- */
-function responsive_favicons_uninstall() {
-
-}
-
 
 /**
  * Convert Drupal variables to Backdrop config.

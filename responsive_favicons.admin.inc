@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Admin page callbacks for the responsive_favicons module.
@@ -9,30 +8,33 @@
  * Menu callback; Provide the administration overview page.
  */
 function responsive_favicons_config_page() {
+  $config = config('responsive_favicons.settings');
   $form['responsive_favicons_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Path to responsive favicon files'),
     '#description' => t('A local file system path where favicon files will be stored. This directory must exist and be writable by Backdrop.'),
     '#field_prefix' => file_create_url('public://'),
-    '#default_value' => config_get('responsive_favicons.settings', 'responsive_favicons_path'), 
+    '#default_value' => $config->get('responsive_favicons_path'),
   );
   $form['responsive_favicons_tags'] = array(
     '#type' => 'textarea',
     '#title' => t('Favicon tags'),
-    '#description' => t('Paste the code provided by <a href="http://realfavicongenerator.net/" target="_blank">http://realfavicongenerator.net/</a>. Make sure each link is on a separate line. It is fine to paste links with paths like "/apple-touch-icon-57x57.png" as these will be converted to the correct paths automatically.'),
-    '#default_value' => implode(PHP_EOL, config_get('responsive_favicons.settings', 'responsive_favicons_tags')),
+    '#description' => t('Paste the code provided by <a href="@real-favicon-generator" target="_blank">RealFaviconGenerator</a>. Make sure each link is on a separate line. It is fine to paste links with paths like "/apple-touch-icon.png" as these will be converted to the correct paths automatically.', array(
+      '@real-favicon-generator' => 'https://realfavicongenerator.net/',
+    )),
+    '#default_value' => implode(PHP_EOL, $config->get('responsive_favicons_tags')),
     '#rows' => 16,
   );
   $form['responsive_favicons_upload'] = array(
     '#type' => 'file',
-    '#title' => t('Upload a zip file from realfavicongenerator.net to install'),
+    '#title' => t('Upload the zip file you downloaded from RealFaviconGenerator.'),
     '#description' => t('For example: %filename from your local computer. This only needs to be done once.', array('%filename' => 'favicons.zip')),
   );
   $form['responsive_favicons_remove_default'] = array(
     '#type' => 'checkbox',
     '#title' => t('Remove default favicon from Backdrop'),
     '#description' => t('It is recommended to remove default favicon as it can cause issues'),
-    '#default_value' => config_get('responsive_favicons.settings', 'responsive_favicons_remove_default'), 
+    '#default_value' => $config->get('responsive_favicons_remove_default'),
   );
 
   $form['actions']['#type'] = 'actions';
@@ -56,7 +58,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     foreach ($tags as $pos => $tag) {
       $tags[$pos] = trim($tag);
     }
-    $config->set('responsive_favicons_tags', $tags); 
+    $config->set('responsive_favicons_tags', $tags);
   }
 
   // Remove trailing slash on responsive_favicons_path.
@@ -92,7 +94,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
     }
 
     // Create the destination directory.
-    $destination = 'public://' . $config->get('responsive_favicons_path'); 
+    $destination = 'public://' . $config->get('responsive_favicons_path');
     file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
 
     // Copy the files to the correct location.
@@ -110,13 +112,26 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
           $replace = '"' . str_replace('/', '\/', _responsive_favicons_normalise_path('/android-chrome'));
           $file_contents = preg_replace('/' . $find . '/', $replace, $file_contents);
           file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
+          continue;
         }
         // Rewrite the paths of the XML files.
-        else if (preg_match('/\.xml$/', $file)) {
+        if (preg_match('/\.xml$/', $file)) {
           $file_contents = file_get_contents(backdrop_realpath($uri));
           $find = preg_quote('"/mstile', '/');
           $replace = '"' . _responsive_favicons_normalise_path('/mstile');
           $file_contents = preg_replace('/' . $find . '/', $replace, $file_contents);
+          file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
+          continue;
+        }
+        // Rewrite the paths of site.webmanifest files.
+        if (preg_match('/site\.webmanifest$/', $file)) {
+          $file_contents = file_get_contents(backdrop_realpath($uri));
+          $site_manifest = backdrop_json_decode($file_contents);
+          foreach ($site_manifest['icons'] as $index => $icon) {
+            $icon_src = _responsive_favicons_normalise_path($icon['src']);
+            $site_manifest['icons'][$index]['src'] = $icon_src;
+          }
+          $file_contents = backdrop_json_encode($site_manifest, TRUE);
           file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
         }
       }
@@ -136,7 +151,7 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
 /**
  * Returns a short unique identifier for this Backdrop installation.
  *
- * @return
+ * @return string
  *   An eight character string uniquely identifying this Backdrop installation.
  */
 function _responsive_favicons_unique_identifier() {
@@ -150,18 +165,18 @@ function _responsive_favicons_unique_identifier() {
 /**
  * Returns the directory where update archive files should be extracted.
  *
- * @param $create
+ * @param bool $create
  *   (optional) Whether to attempt to create the directory if it does not
  *   already exist. Defaults to TRUE.
  *
- * @return
+ * @return string
  *   The full path to the temporary directory where update file archives should
  *   be extracted.
  */
 function _responsive_favicons_extract_directory($create = TRUE) {
   $directory = &backdrop_static(__FUNCTION__, '');
   if (empty($directory)) {
-    $directory = 'temporary://responsive-favicons .' . _responsive_favicons_unique_identifier();
+    $directory = 'temporary://responsive-favicons.' . _responsive_favicons_unique_identifier();
     if ($create && !file_exists($directory)) {
       mkdir($directory);
     }
