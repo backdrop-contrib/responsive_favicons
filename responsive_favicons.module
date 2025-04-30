@@ -1,56 +1,19 @@
 <?php
-
 /**
  * @file
  * Responsive favicons module file.
  */
 
 /**
- * Implements hook_help().
- */
-function responsive_favicons_help($path, $arg) {
-  switch ($path) {
-    case 'admin/help#responsive_favicons':
-      $readme_file = dirname(__FILE__) . '/README.txt';
-      if (file_exists($readme_file)) {
-        $readme = file_get_contents($readme_file);
-      }
-      if (!isset($readme)) {
-        return '';
-      }
-      // Markdown is optionally supported if you already have it installed.
-      if (module_exists('markdown')) {
-        $filters = module_invoke('markdown', 'filter_info');
-        $info = $filters['filter_markdown'];
-
-        if (function_exists($info['process callback'])) {
-          $function = $info['process callback'];
-          $output = filter_xss_admin($function($readme, NULL));
-        }
-        else {
-          $output = '<pre>' . check_plain($readme) . '</pre>';
-        }
-      }
-      // Else you get a plain version of the README file.
-      else {
-        $output = '<pre>' . check_plain($readme) . '</pre>';
-      }
-
-      return $output;
-  }
-}
-
-/**
  * Implements hook_config_info().
  */
 function responsive_favicons_config_info() {
-  $prefixes['responsive_favicons.settings'] = array(
+  $info['responsive_favicons.settings'] = array(
     'label' => t('responsive_favicons settings'),
     'group' => t('responsive_favicons'),
   );
-  return $prefixes;
+  return $info;
 }
-
 
 /**
  * Implements hook_permission().
@@ -67,28 +30,26 @@ function responsive_favicons_permission() {
  * Implements hook_menu().
  */
 function responsive_favicons_menu() {
-  // List of icons to redirect.
-  // Note, in order for these to work alter the fast404 pattern to allow these
-  // requests to hit Backdrop. Please see the README for more information.
-  $icons = array(
-    'apple-touch-icon.png',
-    'apple-touch-icon-precomposed.png',
-    'browserconfig.xml',
-  );
-  // Try to avoid clashing with the favicon module.
-  if (!module_exists('favicon')) {
-    $icons[] = 'favicon.ico';
+  // List of files to redirect.
+  // For favicon.ico to work, you will need to comment out the following line
+  // in your .htaccess file (see the README):
+  // @code
+  // RewriteCond %{REQUEST_URI} !=/favicon.ico
+  // @endcode
+  $files = responsive_favicons_load_all_icons()['files'];
+  if (!empty($files)) {
+    foreach ($files as $file) {
+      $items[$file] = array(
+        'page callback' => 'responsive_favicons_get_file',
+        'page arguments' => array($file),
+        'delivery callback' => 'responsive_favicons_deliver_file',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+        'file' => 'responsive_favicons.delivery.inc',
+      );
+    }
   }
-  foreach($icons as $icon) {
-    $items[$icon] = array(
-      'page callback' => 'responsive_favicons_get_file',
-      'page arguments' => array($icon),
-      'delivery callback' => 'responsive_favicons_deliver_file',
-      'access callback' => TRUE,
-      'type' => MENU_CALLBACK,
-      'file' => 'responsive_favicons.delivery.inc',
-    );
-  }
+
   $items['admin/config/user-interface/responsive_favicons'] = array(
     'title' => 'Responsive favicons',
     'description' => 'Configure responsive favicons',
@@ -104,32 +65,21 @@ function responsive_favicons_menu() {
 }
 
 /**
- * Implements hook_page_build().
+ * Implements hook_preprocess_page().
  *
  * Adds responsive favicons to HTML head. A trailing newline is added to ensure
  * the next tag in the HTML head section starts on the next line.
  */
 function responsive_favicons_preprocess_page(&$variables) {
   $tags = responsive_favicons_load_all_icons();
-  
-  // original module code, but the "found" tags and the "missing" tags are both actually "found", but incorrectly thought as "missing"
-  // do you want to make this module work as originally thought?  Delete the both section below and fix this "found only" section commented out.
-  // using the folder structure of /files/favicons
-  // if (!empty($tags['found'])) {
-  //   $html = array(
-  //     '#type' => 'markup',
-  //     '#markup' => implode(PHP_EOL, $tags['found']) . PHP_EOL,
-  //   );
 
-  //   backdrop_add_html_head($html, 'responsive_favicons');
-  // }
-  
-  $html = array(
+  if (!empty($tags['found'])) {
+    $html = array(
       '#type' => 'markup',
-      '#markup' => implode(PHP_EOL, $tags['found']) . PHP_EOL . implode(PHP_EOL, $tags['missing']) . PHP_EOL,
+      '#markup' => implode(PHP_EOL, $tags['found']) . PHP_EOL,
     );
-
-    backdrop_add_html_head($html, 'responsive_favicons');  
+    backdrop_add_html_head($html, 'responsive_favicons');
+  }
 }
 
 /**
@@ -185,11 +135,11 @@ function responsive_favicons_load_all_icons() {
 
 /**
  * Helper function to check whether responsive favicon files exist and are
- * readable. This function also strips any pasted content that is not a link
- * or a meta tag.
+ * readable. This function also strips any pasted content that is not a link or
+ * a meta tag.
  *
  * @param string $html
- *   html tag
+ *   HTML tag.
  * @return array $missing_files
  */
 function _responsive_favicons_validate_tags($html) {
@@ -197,15 +147,20 @@ function _responsive_favicons_validate_tags($html) {
 
   $found = array();
   $missing = array();
+  // Store the files that exist in an array to send back so we can use this to
+  // dynamically deliver any requests for these files at the root that ignore
+  // the path in the 'link' tag.
+  $files = array();
 
   $dom = new DOMDocument();
   $dom->loadHTML($html);
 
-  // BACKDROP_ROOT contains the sub directory of the Backdrop install (if present),
-  // in our case we do not want this as $file_path already contains this.
+  // BACKDROP_ROOT contains the sub directory of the Backdrop install (if
+  // present); in our case we do not want this as $file_path already contains
+  // this.
   $docroot = preg_replace('/' . preg_quote($base_path, '/') . '$/', '/', BACKDROP_ROOT);
 
-  // Find all the apple touch icons.
+  // Find all the icons and other files.
   $tags = $dom->getElementsByTagName('link');
   foreach ($tags as $tag) {
     $file_path = _responsive_favicons_normalise_path($tag->getAttribute('href'));
@@ -213,6 +168,7 @@ function _responsive_favicons_validate_tags($html) {
 
     if (file_exists($docroot . $file_path) && is_readable($docroot . $file_path)) {
       $found[] = $dom->saveXML($tag);
+      $files[] = basename($file_path);
     }
     else {
       $missing[] = $dom->saveXML($tag);
@@ -245,13 +201,18 @@ function _responsive_favicons_validate_tags($html) {
   return array(
     'found' => $found,
     'missing' => $missing,
+    'files' => $files,
   );
 }
 
 /**
  * Help to normalise the path to the icons.
  *
- * @param $file_path
+ * This uses a complex approach to get a relative path to the files, but it is
+ * a recommended method.
+ * @see https://www.drupal.org/node/837794#comment-9124435
+ *
+ * @param string $file_path
  *   The filename of the icon.
  * @return string
  *   The full relative path to the icon within public files.
@@ -264,13 +225,9 @@ function _responsive_favicons_normalise_path($file_path) {
     $file_path = str_replace($base_path, '', $file_path);
   }
 
-  // There appears to be no sane way of getting a relative path to a file, so
-  // this is the best for now.
-  // @see https://www.drupal.org/node/837794#comment-9124435
   $wrapper = file_stream_wrapper_get_instance_by_uri('public://');
   if ($wrapper instanceof BackdropLocalStreamWrapper) {
     $relative_path = $wrapper->getDirectoryPath() . '/' . config_get('responsive_favicons.settings', 'responsive_favicons_path') . $file_path;
   }
-
   return $base_path . $relative_path;
 }

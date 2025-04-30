@@ -2,7 +2,10 @@ name = Responsive Favicons
 description = Add responsive favicons to your site based on the code from http://realfavicongenerator.net/
 backdrop = 1.x
 type = module
+configure = admin/config/user-interface/responsive_favicons
 
 maintainers[yorkshire-pudding] = Martin Price
+
 package = Appearance
-configure = admin/config/user-interface/responsive_favicons
+tags[] = User interface
+tags[] = Theme Enhancements
