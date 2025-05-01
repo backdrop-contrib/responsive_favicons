@@ -9,8 +9,8 @@
  */
 function responsive_favicons_config_info() {
   $info['responsive_favicons.settings'] = array(
-    'label' => t('responsive_favicons settings'),
-    'group' => t('responsive_favicons'),
+    'label' => t('Responsive favicons settings'),
+    'group' => t('Configuration'),
   );
   return $info;
 }
@@ -36,7 +36,7 @@ function responsive_favicons_menu() {
   // @code
   // RewriteCond %{REQUEST_URI} !=/favicon.ico
   // @endcode
-  $files = responsive_favicons_load_all_icons()['files'];
+  $files = responsive_favicons_load_all_icons()['files'] ?? array();
   if (!empty($files)) {
     foreach ($files as $file) {
       $items[$file] = array(
