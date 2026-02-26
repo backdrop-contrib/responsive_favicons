@@ -22,6 +22,7 @@ function responsive_favicons_permission() {
   return array(
     'administer responsive favicons' => array(
       'title' => t('Administer responsive favicons'),
+      'restrict access' => TRUE,
     ),
   );
 }
@@ -172,29 +173,6 @@ function _responsive_favicons_validate_tags($html) {
     }
     else {
       $missing[] = $dom->saveXML($tag);
-    }
-  }
-
-  // Find any Windows 8 meta tags.
-  $tags = $dom->getElementsByTagName('meta');
-  foreach ($tags as $tag) {
-    $name = $tag->getAttribute('name');
-
-    // We only validate the image file.
-    if ($name === 'msapplication-TileImage') {
-      $file_path = _responsive_favicons_normalise_path($tag->getAttribute('content'));
-      $tag->setAttribute('content', $file_path);
-
-      if (file_exists($docroot . $file_path) && is_readable($docroot . $file_path)) {
-        $found[] = $dom->saveXML($tag);
-      }
-      else {
-        $missing[] = $dom->saveXML($tag);
-      }
-    }
-    // Just add any other meta tags and assume they contain no images.
-    else {
-      $found[] = $dom->saveXML($tag);
     }
   }
 
