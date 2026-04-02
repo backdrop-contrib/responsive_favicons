@@ -22,7 +22,6 @@ function responsive_favicons_permission() {
   return array(
     'administer responsive favicons' => array(
       'title' => t('Administer responsive favicons'),
-      'restrict access' => TRUE,
     ),
   );
 }
