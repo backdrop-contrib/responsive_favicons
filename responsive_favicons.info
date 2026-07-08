@@ -9,3 +9,4 @@ maintainers[yorkshire-pudding] = Martin Price
 package = Appearance
 tags[] = User interface
 tags[] = Theme Enhancements
+tags[] = Mobile

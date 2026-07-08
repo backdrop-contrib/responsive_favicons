@@ -36,6 +36,21 @@ function responsive_favicons_config_page() {
     '#description' => t('It is recommended to remove default favicon as it can cause issues'),
     '#default_value' => $config->get('responsive_favicons_remove_default'),
   );
+  $manifest_display_options = array(
+    'browser' => t('Browser'),
+    'fullscreen' => t('Full Screen'),
+    'standalone' => t('Standalone'),
+    'minimal-ui' => t('Minimal UI'),
+  );
+  $form['responsive_favicons_manifest_display'] = array(
+    '#type' => 'select',
+    '#title' => t('Site manifest display option'),
+    '#description' => t("Unless your website is an app, you will probably want to select 'Browser'. For further details of the options, see the <a href='@mdn_reference_manifest_display'>MDN reference for this property</a>.", array(
+      '@mdn_reference_manifest_display' => 'https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/display',
+    )),
+    '#options' => $manifest_display_options,
+    '#default_value' => $config->get('responsive_favicons_manifest_display') ?? 'browser',
+  );
 
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
@@ -123,13 +138,19 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
           file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
           continue;
         }
-        // Rewrite the paths of site.webmanifest files.
+        // Rewrite parts of site.webmanifest files.
         if (preg_match('/site\.webmanifest$/', $file)) {
           $file_contents = file_get_contents(backdrop_realpath($uri));
           $site_manifest = backdrop_json_decode($file_contents);
+          // Rewrite the paths of site.webmanifest files.
           foreach ($site_manifest['icons'] as $index => $icon) {
             $icon_src = _responsive_favicons_normalise_path($icon['src']);
             $site_manifest['icons'][$index]['src'] = $icon_src;
+          }
+          // Rewrite the display setting if required.
+          $display_setting = $form_state['values']['responsive_favicons_manifest_display'];
+          if ($display_setting != 'standalone') {
+            $site_manifest['display'] = $display_setting;
           }
           $file_contents = backdrop_json_encode($site_manifest, TRUE);
           file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
@@ -141,9 +162,23 @@ function responsive_favicons_config_page_submit($form, &$form_state) {
       backdrop_set_message(format_plural($success_count, 'Uploaded 1 favicon successfully.', 'Uploaded @count favicons successfully.'));
     }
   }
+  else {
+    // Rewrite the display setting if required.
+    $display_form_setting = $form_state['values']['responsive_favicons_manifest_display'];
+    $destination = 'public://' . $config->get('responsive_favicons_path');
+    $uri = $destination . '/site.webmanifest';
+    $file_contents = file_get_contents(backdrop_realpath($uri));
+    $site_manifest = backdrop_json_decode($file_contents);
+    if ($display_form_setting != $site_manifest['display']) {
+      $site_manifest['display'] = $display_form_setting;
+      $file_contents = backdrop_json_encode($site_manifest, TRUE);
+      file_unmanaged_save_data($file_contents, $uri, FILE_EXISTS_REPLACE);
+    }
+  }
 
   $config->set('responsive_favicons_path', $form_state['values']['responsive_favicons_path']);
   $config->set('responsive_favicons_remove_default', $form_state['values']['responsive_favicons_remove_default']);
+  $config->set('responsive_favicons_manifest_display', $form_state['values']['responsive_favicons_manifest_display']);
   $config->save();
   backdrop_set_message(t('The configuration options have been saved.'));
 }
